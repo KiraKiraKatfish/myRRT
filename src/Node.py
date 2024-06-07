@@ -33,6 +33,9 @@ class Node:
         distance = math.sqrt((node.x-self.x)**2 + (node.y-self.y)**2)
         return distance
     
+    def get_coord(self):
+        return (self.x, self.y)
+    
     # returns the closest node to itself
     # precondition: self node is not in nodes list
     def closest_node(self, nodes):
