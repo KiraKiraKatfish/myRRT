@@ -7,6 +7,7 @@ from Map import Map
 XMIN, XMAX, YMIN, YMAX = -20, 20, -20, 20
 #constants
 EPSILON = 2
+NUM_OBSTACLES = 2
 
 def goal_reached(nodes, goal):
     for node in nodes:
@@ -19,10 +20,10 @@ def RRT(start, goal, num_iter):
     success_counter = 0
 
     # generate obstacles that don't cover start and goal
-    map.generate_obstacles(1)
-    # while map.node_in_obstacle(start) or map.node_in_obstacle(goal):
-    #     map.clear_obstacles
-    #     map.generate_obstacles(1)
+    map.generate_obstacles(NUM_OBSTACLES)
+    while map.node_in_obstacle(start) or map.node_in_obstacle(goal):
+        map.clear_obstacles()
+        map.generate_obstacles(NUM_OBSTACLES)
 
     # sample num_iter # of points
     for i in range(num_iter):
@@ -33,9 +34,6 @@ def RRT(start, goal, num_iter):
         else:
             w = u
 
-        # v.children.append(w)
-        # w.parent = v
-        # map.nodes.append(w)
         # check if sample is safe
         if not (map.node_in_obstacle(w) or map.obstacle_between_nodes(w, v)):
             v.children.append(w)
@@ -84,8 +82,8 @@ def random_node():
     return Node(x,y)
 
 if __name__ == "__main__":
-    start = Node(-15,-10)
-    goal = Node(19,19)
-    map = RRT(start, goal, 500)
+    start = Node(-20,-20)
+    goal = Node(15,15)
+    map = RRT(start, goal, 1000)
     
     
