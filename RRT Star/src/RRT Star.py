@@ -36,10 +36,20 @@ def RRT(start, goal, num_iter):
 
         # check if sample is safe
         if not (map.node_in_obstacle(w) or map.obstacle_between_nodes(w, v)):
+            # attach sample to tree
             v.children.append(w)
             w.parent = v
+            w.cost = v.cost + v.get_distance(w)
+            
+            # compare to neighbors for shorter path
+            neighbors = map.findCloseNeighbors(w,5)
+            map.reduce_path(w,neighbors)
             map.nodes.append(w)
             success_counter+=1
+
+            # compare neighbors to new path for potential shorter path
+            for neighbor in neighbors:
+                map.reduce_path(neighbor,[w])
 
     print(success_counter)
 
@@ -51,16 +61,18 @@ def RRT(start, goal, num_iter):
         last_node = goal.closest_node(map.nodes)
         last_node.children.append(goal)
         goal.parent = last_node
+        goal.cost = last_node.cost + last_node.get_distance(goal)
         map.nodes.append(goal)
 
         map.plot_solution(trace_back(start, goal))
-        print("Solution Found")
+        plt.figtext(0.5, 0.01, "Solution Cost: " + str(goal.cost), wrap=True, horizontalalignment='center', fontsize=12)
+        print("Solution Found! Cost: ", goal.cost)
     else:
         print("Solution Not Found")
 
     # plot the start and goal points
-    map.plot_single_node(start, 'go')
-    map.plot_single_node(goal, 'mo')
+    map.plot_single_node(start, 'go', 10)
+    map.plot_single_node(goal, 'yo', 10)
 
     map.show()
 
@@ -82,8 +94,8 @@ def random_node():
     return Node(x,y)
 
 if __name__ == "__main__":
-    start = Node(-20,-20)
+    start = Node(-15,-15)
     goal = Node(15,15)
-    map = RRT(start, goal, 1000)
+    map = RRT(start, goal, 500)
     
     

@@ -2,9 +2,10 @@ import numpy as np
 import math
 
 class Node:
-    def __init__(self, x, y, children=None, parent=None):
+    def __init__(self, x, y, cost=0, children=None, parent=None):
         self.x = x
         self.y = y
+        self.cost = cost
         self.children = []
         self.parent = None
 

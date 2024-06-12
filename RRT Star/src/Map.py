@@ -6,7 +6,7 @@ from Obstacle import Obstacle
 class Map:
     def __init__(self, nodes=[], obstacles=[], axis=[-20,20,-20,20]):
         self.nodes = nodes
-        self.obstacles = obstacles
+        self.obstacles = [] #obstacles
         self.axis = {'XMIN': axis[0], 'XMAX': axis[1], 'YMIN': axis[2], 'YMAX': axis[3]}
         self.fig, self.ax = plt.subplots()
 
@@ -43,8 +43,39 @@ class Map:
                 return True
         return False
     
+    # returns all the nodes within a r radius of the target node
+    def findCloseNeighbors(self, target, r):
+        neighbors = []
+        ball = Obstacle(target.get_coord(), r)
+
+        # find neighbors within radius
+        for node in self.nodes:
+            if ball.contains_node(node) and not self.obstacle_between_nodes(target, node):
+                neighbors.append(node)
+
+        return neighbors
+    
+    # compares target node's path to potential new paths using nodes in the list
+    # reduces target node's path to the shortest possible path
+    def reduce_path(self, target, nodes):
+        shortest_path_parent = None
+        shortest_path_cost = target.cost
+        for node in nodes:
+            new_path_cost = node.cost + target.get_distance(node)
+            if new_path_cost < shortest_path_cost:
+                shortest_path_parent = node
+                shortest_path_cost = new_path_cost
+        
+        if shortest_path_parent != None:
+            target.parent.children.remove(target)
+            target.parent = shortest_path_parent
+            shortest_path_parent.children.append(target)
+            target.add_cost(shortest_path_cost - target.cost)
+
+
     # plots nodes and obstacles
     def plot(self):
+        plt.title("RRT*")
         self.ax.set_xlim(self.axis['XMIN'],self.axis['XMAX'])
         self.ax.set_ylim(self.axis['YMIN'],self.axis['YMAX'])
 
@@ -54,11 +85,11 @@ class Map:
     def plot_solution(self, nodes):
         for node in nodes:
             if node.parent != None:
-                self.draw_edge(node, node.parent, 'r')
+                self.draw_edge(node, node.parent, 'r', 3)
 
     def plot_obstacles(self):
         for obstacle in self.obstacles:
-            patch = patches.PathPatch(obstacle.path, facecolor='red')
+            patch = patches.PathPatch(obstacle.path, facecolor='blue', lw=0)
             self.ax.add_patch(patch)
 
     def plot_nodes(self):
@@ -70,15 +101,18 @@ class Map:
             for child in node.children:
                 self.draw_edge(node,child, 'k')
 
-    def plot_single_node(self, node, color):
-        self.ax.plot(node.x, node.y, color)
+    def plot_single_node(self, node, color, markersize=None):
+        if(markersize==None):
+            self.ax.plot(node.x, node.y, color)
+        else:
+            self.ax.plot(node.x, node.y, color, markersize=markersize)
 
     def show(self):
         plt.show()
 
     # (TO BE REPLACED WHEN EDGES ARE IMPLEMENTED)
-    def draw_edge(self, node1, node2, color):
-        self.ax.plot([node1.x, node2.x], [node1.y,node2.y], color)
+    def draw_edge(self, node1, node2, color, line_width=1):
+        self.ax.plot([node1.x, node2.x], [node1.y,node2.y], color, lw=line_width)
         
             
 
