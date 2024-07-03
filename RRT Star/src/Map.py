@@ -2,14 +2,22 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from Obstacle import Obstacle
+from JarvisMarch import *
+from KDTree import KDTree
 
 class Map:
     def __init__(self, nodes=[], obstacles=[], axis=[-20,20,-20,20]):
         self.nodes = nodes
+        self.tree = KDTree(nodes)
         self.obstacles = [] #obstacles
         self.axis = {'XMIN': axis[0], 'XMAX': axis[1], 'YMIN': axis[2], 'YMAX': axis[3]}
         self.fig, self.ax = plt.subplots()
+        self.solution = []
 
+    # inserts node into node list and kd tree
+    def add_node(self, node):
+        self.nodes.append(node)
+        self.tree.insert(node)
 
     # generates num random obstacles
     def generate_obstacles(self, num):
@@ -45,15 +53,7 @@ class Map:
     
     # returns all the nodes within a r radius of the target node
     def findCloseNeighbors(self, target, r):
-        neighbors = []
-        ball = Obstacle(target.get_coord(), r)
-
-        # find neighbors within radius
-        for node in self.nodes:
-            if ball.contains_node(node) and not self.obstacle_between_nodes(target, node):
-                neighbors.append(node)
-
-        return neighbors
+        return self.tree.neighborsInRadius(target, r)
     
     # compares target node's path to potential new paths using nodes in the list
     # reduces target node's path to the shortest possible path
@@ -62,7 +62,7 @@ class Map:
         shortest_path_cost = target.cost
         for node in nodes:
             new_path_cost = node.cost + target.get_distance(node)
-            if new_path_cost < shortest_path_cost:
+            if new_path_cost < shortest_path_cost and not self.obstacle_between_nodes(node, target):
                 shortest_path_parent = node
                 shortest_path_cost = new_path_cost
         
@@ -82,10 +82,18 @@ class Map:
         self.plot_obstacles()
         self.plot_nodes()
 
-    def plot_solution(self, nodes):
-        for node in nodes:
+    def plot_solution(self):
+        for node in self.solution:
             if node.parent != None:
                 self.draw_edge(node, node.parent, 'r', 3)
+
+        ConvexHull = MalevolentShrine(self.solution)
+        for node_a, node_b in zip(ConvexHull, ConvexHull[1:]):
+            self.draw_edge(node_a,node_b,'r')
+        self.draw_edge(ConvexHull[0], ConvexHull[-1], 'r')
+
+        plt.figtext(0.333, 0.01, "Solution Cost: " + str(self.solution[0].cost), wrap=True, horizontalalignment='center', fontsize=8)
+        plt.figtext(0.667, 0.01, "Convex Hull # vertices: " + str(len(ConvexHull)), wrap=True, horizontalalignment='center', fontsize=8)
 
     def plot_obstacles(self):
         for obstacle in self.obstacles:
@@ -94,12 +102,14 @@ class Map:
 
     def plot_nodes(self):
         for node in self.nodes:
-            #plot the node itself
-            self.ax.plot(node.x, node.y, 'ko')
-
-            #plot all the edges connecting to it
+            #plot all the edges connecting to the node
             for child in node.children:
-                self.draw_edge(node,child, 'k')
+                self.draw_edge(node,child, 'tab:gray')
+
+            #plot the node itself
+            self.ax.plot(node.x, node.y, 'k', marker='.')
+
+
 
     def plot_single_node(self, node, color, markersize=None):
         if(markersize==None):
@@ -111,8 +121,8 @@ class Map:
         plt.show()
 
     # (TO BE REPLACED WHEN EDGES ARE IMPLEMENTED)
-    def draw_edge(self, node1, node2, color, line_width=1):
-        self.ax.plot([node1.x, node2.x], [node1.y,node2.y], color, lw=line_width)
+    def draw_edge(self, node1, node2, c, line_width=1):
+        self.ax.plot([node1.x, node2.x], [node1.y,node2.y], color=c, lw=line_width)
         
             
 
@@ -120,6 +130,7 @@ class Map:
         x = random.uniform(self.axis['XMIN'],self.axis['XMAX'])
         y = random.uniform(self.axis['YMIN'],self.axis['YMAX'])
         return (x,y)
+    
     
 if __name__ == "__main__":
     map = Map()

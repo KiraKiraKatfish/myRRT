@@ -2,18 +2,13 @@ import random
 import matplotlib.pyplot as plt
 from Node import Node
 from Map import Map
+from JarvisMarch import *
 
 #map boundaries
 XMIN, XMAX, YMIN, YMAX = -20, 20, -20, 20
 #constants
 EPSILON = 2
-NUM_OBSTACLES = 2
-
-def goal_reached(nodes, goal):
-    for node in nodes:
-        if node.get_distance(goal) <= EPSILON:
-           return True
-    return False 
+NUM_OBSTACLES = 3
 
 def RRT(start, goal, num_iter):
     map = Map([start], [], [XMIN,XMAX,YMIN,YMAX])
@@ -28,8 +23,8 @@ def RRT(start, goal, num_iter):
     # sample num_iter # of points
     for i in range(num_iter):
         u = random_node()
-        v = u.closest_node(map.nodes)
-        if v.get_distance(u) > EPSILON:
+        v, dist = map.tree.nearestNeighbor(u)
+        if dist > EPSILON:
             w = v.calc_w(u, EPSILON)
         else:
             w = u
@@ -44,7 +39,7 @@ def RRT(start, goal, num_iter):
             # compare to neighbors for shorter path
             neighbors = map.findCloseNeighbors(w,5)
             map.reduce_path(w,neighbors)
-            map.nodes.append(w)
+            map.add_node(w)
             success_counter+=1
 
             # compare neighbors to new path for potential shorter path
@@ -57,15 +52,17 @@ def RRT(start, goal, num_iter):
     map.plot()
 
     # plot solution if solution found
-    if goal_reached(map.nodes, goal):
-        last_node = goal.closest_node(map.nodes)
-        last_node.children.append(goal)
-        goal.parent = last_node
-        goal.cost = last_node.cost + last_node.get_distance(goal)
-        map.nodes.append(goal)
+    # check if the closest node to the goal is within acceptable range
+    near_goal_node, dist = map.tree.nearestNeighbor(goal)
+    ## ADD CHECK FOR OBSTACLE IN BETWEEN NODE AND GOAL ##
+    if dist <= EPSILON:
+        near_goal_node.children.append(goal)
+        goal.parent = near_goal_node
+        goal.cost = near_goal_node.cost + dist
+        map.add_node(goal)
 
-        map.plot_solution(trace_back(start, goal))
-        plt.figtext(0.5, 0.01, "Solution Cost: " + str(goal.cost), wrap=True, horizontalalignment='center', fontsize=12)
+        map.solution = trace_back(start, goal)
+        map.plot_solution()
         print("Solution Found! Cost: ", goal.cost)
     else:
         print("Solution Not Found")
@@ -76,7 +73,7 @@ def RRT(start, goal, num_iter):
 
     map.show()
 
-    return
+    return map
 
 def trace_back(start, goal):
     node = goal
@@ -96,6 +93,8 @@ def random_node():
 if __name__ == "__main__":
     start = Node(-15,-15)
     goal = Node(15,15)
-    map = RRT(start, goal, 500)
+    map = RRT(start, goal, 2000)
+
+    plt.show()
     
     
