@@ -121,6 +121,11 @@ class Node:
         zipped_lines = zip(left, right)
         lines = [first_line, second_line] + [a + u * ' ' + b for a, b in zipped_lines]
         return lines, n + m + u, max(p, q) + 2, n + u // 2
+    
+    def equals(self,a,b):
+        if a.x == b.x and a.y == b.y:
+            return True
+        return False
 
 # simple list implementation of a heap (as such, meant for small heaps)
 class NodeHeap:

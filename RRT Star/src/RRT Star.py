@@ -8,7 +8,7 @@ from JarvisMarch import *
 XMIN, XMAX, YMIN, YMAX = -20, 20, -20, 20
 #constants
 EPSILON = 2
-NUM_OBSTACLES = 3
+NUM_OBSTACLES = 2
 
 def RRT(start, goal, num_iter):
     map = Map([start], [], [XMIN,XMAX,YMIN,YMAX])
@@ -93,7 +93,18 @@ def random_node():
 if __name__ == "__main__":
     start = Node(-15,-15)
     goal = Node(15,15)
-    map = RRT(start, goal, 2000)
+    map = RRT(start, goal, 5000)
+
+    if map.solution != []:
+        for node in map.solution:
+            print("Node(%s,%s),"%(node.x, node.y))
+
+        print("Now printing DP")
+
+        for node in map.solution:
+            neighbors = map.tree.neighborsInRadius(node, 2)
+            for neighbor in neighbors:
+                print("Node(%s,%s),"%(neighbor.x, neighbor.y))
 
     plt.show()
     

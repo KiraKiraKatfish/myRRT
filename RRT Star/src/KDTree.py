@@ -4,7 +4,7 @@ from Node import Node, NodeHeap
 # KDTree implementation (2D) for Node class
 # Reference: https://www.geeksforgeeks.org/search-and-insertion-in-k-dimensional-tree/
 class KDTree:
-    def __init__(self, nodes):
+    def __init__(self, nodes=[]):
         self.root = None
         for node in nodes:
             self.insert(node)
@@ -162,7 +162,7 @@ class KDTree:
         # Recursive Case
         # Check current node
         distance = root.get_distance(target)
-        if distance < heap.peek_largest_dist() or not heap.is_full():
+        if (distance < heap.peek_largest_dist() or not heap.is_full()) and distance != 0:
             heap.push(root, distance)
 
         # Traverse left or right
@@ -197,8 +197,8 @@ class KDTree:
         # makes a heap of maxsize k
         heap = NodeHeap(k)
         self.kNearestNeighborsRec(self.root, target, 0, heap)
-        return heap.heap
-
+        nodes, distances = zip(*heap.heap)
+        return nodes
 
 
 
@@ -227,5 +227,5 @@ if __name__ == "__main__":
     neighbors2 = kdtree.kNearestNeighbors(Node(6,5), 5)
     i = 0
     for neighbor in neighbors2:
-        print("%s: Neighbor: (%s,%s)\nDistance: %s" %(i, neighbor[0].x, neighbor[0].y, neighbor[1]))
+        print("%s: Neighbor: (%s,%s)\n" %(i, neighbor.x, neighbor.y))
         i += 1
