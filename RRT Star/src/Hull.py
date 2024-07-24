@@ -3,6 +3,52 @@ import copy
 import math
 from Node import Node
 from KDTree import KDTree
+import heapq
+
+global_nodes = []
+class Triangle:
+    def __init__(self,a,b,c,d=None, e=None):
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+        self.e = e
+
+        if d == None or e == None:
+            self.is_concave = True
+        else:
+            self.is_concave = False
+        
+        if self.b != None:
+            self.area = 0.5*abs(a.x*b.y+b.x*c.y+c.x*a.y-a.x*c.y-b.x*a.y-c.x*b.y)
+            self.is_null = False
+        else:
+            self.area = 100000
+            self.is_null = True
+
+        # left and right pointers for linked list
+        self.left, self.right = None, None
+
+    def __lt__(self, other):
+        return self.area < other.area
+    
+    def __repr__(self):
+        return str(self.area)
+    
+    def __str__(self):
+        return self.__repr__()
+    
+    # Output: list of nodes used in triangle and triangle calculation.
+    #         Concave = 3 nodes. Convex = 5 nodes. Null triangle = 4 nodes
+    def get_nodes(self):
+        if self.is_concave:
+            return [self.a,self.b,self.c]
+        elif self.is_null:
+            return [self.a,self.d,self.e,self.c]
+        else:
+            return [self.a,self.d,self.e,self.c]
+
+
 
 # A concave/convex hull of a given path. Where path is a list of nodes.
 class Hull:
@@ -14,6 +60,8 @@ class Hull:
             self.DP = DP
         self.tree = KDTree(self.DP)
         self.hull = []
+
+        # self.jarvis_march
 
         # self.MalevolentShrine(5)
 
@@ -90,9 +138,51 @@ class Hull:
             if c != None:
                 self.hull.insert(i+1,c)
                 i -= 1
-            else:
-                print("No cut at [%s,%s]"%(i,i+1))
             i += 1
+
+        # # set linked list pointers for the hull
+        # for i in range(len(self.hull-1)):
+        #     if i > 0:
+        #         self.hull[i].left2 = self.hull[i-1]
+        #     self.hull[i].right2 = self.hull[i+1]
+
+        # self.hull[-1].left2 = self.hull[-2]
+        # self.hull[-1].right2 = self.hull[0]
+        # self.hull[0].left2 = self.hull[-1]
+
+        heap = []
+        head, tail = self.construct_triangles(heap, self.hull)
+
+        # passing tail end of the hull, connecting end of hull to start
+        head_ex, tail_ex = self.construct_triangles(heap, self.hull[-2:]+self.hull[:2])
+
+        # connecting the head of the triangle hull to the tail
+        head.left = tail_ex
+        tail_ex.right = head
+        tail.right = head_ex
+        head_ex.left = tail
+
+        for i in range(0):
+            popped = self.pop(heap)
+            if popped == None:
+                print("Error Popping")
+                return
+            
+            # print("A(%s,%s)B(%s,%s)C(%s,%s)"%(popped.a.x,popped.a.y,popped.b.x,popped.b.y,popped.c.x,popped.c.y))
+            
+            self.merge(heap, popped)
+
+        # if(popped.is_concave):
+        #     plt.plot(popped.a.x,popped.a.y, "yo")
+        #     plt.plot(popped.b.x,popped.b.y, "yo")
+        #     plt.plot(popped.c.x,popped.c.y, "yo")
+        # else:
+        #     plt.plot(popped.a.x,popped.a.y, "yo")
+        #     plt.plot(popped.b.x,popped.b.y, "yo")
+        #     plt.plot(popped.c.x,popped.c.y, "yo")
+        #     plt.plot(popped.d.x,popped.d.y, "go")
+        #     plt.plot(popped.e.x,popped.e.y, "go")
+        self.plot_triangles(heap)
         return
     
     def dismantle(self, a, b):
@@ -129,7 +219,6 @@ class Hull:
                     if edge[0] == a or edge[0] == b or edge[1] == a or edge[1] == b:
                         break
                     if self.intersect(a,best_node,edge[0],edge[1]) or self.intersect(best_node,b,edge[0],edge[1]):
-                        print("NODE CHECKING: (%s,%s)"%(best_node.x,best_node.y))
                         return None
 
             return best_node
@@ -175,14 +264,172 @@ class Hull:
 
         return False
 
+
+    # creates triangles from a list of nodes and adds them to the heap
+    # Output: head and tail of constructed triangle linked list
+    def construct_triangles(self, heap, nodes):
+        head = None
+        tail = None
+        previous_triangle = None
+        previous_angle = None
+        tri = None
+
+        angles = []
+        groups_of_3 = list(zip(nodes, nodes[1:], nodes[2:]))
+        for group in groups_of_3:
+            angles.append((self.get_angle(group[0],group[1],group[2]),) + group)
+
+
+        # iterate over angles checking criteria to make triangles
+        for angle in angles:
+            # make Concave Triangle
+            if angle[0] >= 180:
+                tri = Triangle(angle[1],angle[2],angle[3], True)
+                tri.left = previous_triangle
+                
+                # check for root of linked list
+                if previous_triangle == None:
+                    head = tri
+                else:
+                    previous_triangle.right = tri
+                
+                # add to heap and move forward
+                heapq.heappush(heap,tri)
+                previous_triangle = tri
+
+            # make Convex Triangle
+            elif previous_angle != None and angle[0] < 180 and previous_angle[0] < 180:
+                new_point = self.intersect_point(previous_angle[1],previous_angle[2],angle[3],angle[2])
+
+                # Convex Triangle additional check (avoids parallel)
+                if angle[0] + previous_angle[0] > 180 and new_point != None:
+                    tri = Triangle(previous_angle[1],new_point, angle[3], angle[1],angle[2])
+                    tri.left = previous_triangle
+
+
+                # None Triangle
+                else:
+                    tri = Triangle(previous_angle[1],None, angle[3], angle[1],angle[2])
+                    tri.left = previous_triangle
+            
+                # check for root of linked list
+                if previous_triangle == None:
+                    head = tri
+                else:
+                    previous_triangle.right = tri
+                
+                # add to heap and move forward
+                heapq.heappush(heap,tri)
+                previous_triangle = tri
+
+            previous_angle = angle
+
+        tail = previous_triangle
+
+        return head, tail
+
+    # Input: heapq heap of triangles
+    # Output: Pops triangles until valid triangle found and returns triangle
+    #         returns None in case of error
+    def pop(self, heap):
+        # Edge Case: heap is empty
+        if not heap:
+            return None
+
+        popped = heapq.heappop(heap)
+        while(heap and popped.is_null):
+            popped = heapq.heappop(heap)
+        
+        # Edge Case: final popped triangle is null
+        if not heap and popped.is_null:
+            return None
+        
+        return popped
+        
+    def merge(self, heap, triangle):
+        if triangle.is_concave:
+            self.merge_concave(heap, triangle)
+        else:
+            self.merge_convex(heap, triangle)
+        
+
+    def merge_concave(self, heap, triangle):
+        self.hull.remove(triangle.b)
+
+        #list of all nodes that must be reevaluated for triangles, excluding the node removed in the merge
+        nodes = triangle.left.get_nodes() + triangle.right.get_nodes()
+        nodes = list(filter((triangle.b).__ne__,nodes))
+        nodes_no_repeat = []
+        nodes_no_repeat =  
+        
+        head, tail = self.construct_triangles(heap, nodes_no_repeat)
+        # insert new triangles into linked list, replacing old
+        triangle.left.left.right = head
+        head.left = triangle.left.left
+        triangle.right.right.left = tail
+        tail.right = triangle.right.right
+
+        # mark old triangles as null
+        triangle.left.is_null, triangle.is_null, triangle.right.is_null = True,True,True
+
+        return
+    
+    def merge_convex(self, heap, triangle):
+        # replace obsolete nodes with new node, triangle.b
+        self.hull = [triangle.b if x==triangle.d else x for x in self.hull]
+        self.hull.remove(triangle.e)
+
+        #list of all nodes that must be reevaluated for triangles, excluding the node removed in the merge
+        nodes = triangle.left.get_nodes() + [triangle.b] + triangle.right.get_nodes()
+        nodes = list(filter((triangle.d).__ne__,nodes))
+        nodes = list(filter((triangle.e).__ne__,nodes))
+        nodes_no_repeat = []
+        nodes_no_repeat = [nodes_no_repeat.append(x) for x in nodes if x not in nodes_no_repeat]
+
+        global global_nodes
+        global_nodes = list(filter((triangle.d).__ne__,list(filter((triangle.e).__ne__,triangle.right.get_nodes()))))
+
+        head, tail = self.construct_triangles(heap, nodes_no_repeat)
+        # insert new triangles into linked list, replacing old
+        triangle.left.left.right = head
+        head.left = triangle.left.left
+        triangle.right.right.left = tail
+        tail.right = triangle.right.right
+
+        # mark old triangles as null
+        triangle.left.is_null, triangle.is_null, triangle.right.is_null = True,True,True
+
+        return
+
+
+    # Input: points a,b on line ab. points c,d on line cd. All as nodes
+    # Output: node at intersection
+    # Source: https://www.geeksforgeeks.org/program-for-point-of-intersection-of-two-lines/
+    def intersect_point(self,A,B,C,D):
+        # Line AB represented as a1x + b1y = c1
+        a1 = B.y - A.y
+        b1 = A.x - B.x
+        c1 = a1*(A.x) + b1*(A.y)
+    
+        # Line CD represented as a2x + b2y = c2
+        a2 = D.y - C.y
+        b2 = C.x - D.x
+        c2 = a2*(C.x) + b2*(C.y)
+    
+        determinant = a1*b2 - a2*b1
+    
+        if (determinant == 0):
+            # The lines are parallel.
+            return None
+        else:
+            x = (b2*c1 - b1*c2)/determinant
+            y = (a1*c2 - a2*c1)/determinant
+            return Node(x, y)
+
     # Input: points a and b of a line segment. point c some distance d from the line
     #        note that all points are given as nodes
     # Output: the perpendicular distance d of c from the line segment ab
     def perpendicular_distance(self,a,b,c):
-        # compute standard form linear equation of a and b
-        # A = b.y - a.y
-        # B = a.x - b.y
-        # C = (a.y * (b.x - a.x)) - ((b.y - a.y) * a.x)
         m = (b.y-a.y)/(b.x-a.x)
         C = -(b.y-(m*b.x))
         A = -m
@@ -208,7 +455,7 @@ class Hull:
 
         # plot solution over DP
         for node in self.path:
-            plt.plot(node.x, node.y, 'ro')
+            plt.plot(node.x, node.y, 'k','.')
 
         # plot convex hull
         for node_a, node_b in zip(self.hull, self.hull[1:]):
@@ -217,6 +464,17 @@ class Hull:
 
     def plot_edge(self, node_a,node_b,color):
         plt.plot([node_a.x,node_b.x], [node_a.y,node_b.y], color)
+
+    def plot_triangles(self, triangles):
+        for triangle in triangles:
+            if not triangle.is_null:
+                if triangle.is_concave:
+                    self.plot_edge(triangle.c, triangle.a, 'g')
+
+                else: 
+                    self.plot_edge(triangle.a, triangle.b, 'g')
+                    self.plot_edge(triangle.b, triangle.c, 'g')
+
     
 if __name__ == "__main__":
     sample_path = [
@@ -1220,41 +1478,7 @@ if __name__ == "__main__":
     
     my_hull.jarvis_march()
     my_hull.MalevolentShrine(5)
-    # c = my_hull.dismantle(my_hull.hull[1],my_hull.hull[2])
-    # if c != None:
-    #     my_hull.hull.insert(2,c)
-    # else:
-    #     print("None detected")
 
-    # c = my_hull.dismantle(my_hull.hull[2],my_hull.hull[3])
-    # if c != None:
-    #     my_hull.hull.insert(3,c)
-    # else:
-    #     print("None detected")
-
-    # c = my_hull.dismantle(my_hull.hull[3],my_hull.hull[4])
-    # if c != None:
-    #     my_hull.hull.insert(4,c)
-    # else:
-    #     print("None detected")
-
-    # c = my_hull.dismantle(my_hull.hull[4],my_hull.hull[5])
-    # if c != None:
-    #     my_hull.hull.insert(5,c)
-    # else:
-    #     print("None detected")
-
-    # c = my_hull.dismantle(my_hull.hull[5],my_hull.hull[6])
-    # if c != None:
-    #     my_hull.hull.insert(6,c)
-    # else:
-    #     print("None detected")
-
-    # c = my_hull.dismantle(my_hull.hull[7],my_hull.hull[8])
-    # if c != None:
-    #     my_hull.hull.insert(7,c)
-    # else:
-    #     print("None detected")
 
     print("Printing resulting hull")
 
@@ -1262,9 +1486,52 @@ if __name__ == "__main__":
     print(my_hull.density_length(my_hull.hull[0],my_hull.hull[1]))
     my_hull.plot()
 
-    plt.plot(my_hull.hull[0].x,my_hull.hull[0].y, 'go')
+    plt.plot(my_hull.hull[0].x,my_hull.hull[0].y, 'g')
+
+    for node in global_nodes:
+        print("plt.plot(%s,%s,\"go\",\".\")"%(node.x,node.y))
+
+    
+    # for node in my_hull.hull:
+    #     if node.equals(node,Node(15.7,15.7)):
+    #         plt.plot(15.7,15.7,"go")
+    # plt.plot(10.826754048513582,17.09285688763859,"m",marker='.')
+    # plt.plot(13.591207731977605,17.470970960781727,"m",marker='.')
+    # plt.plot(16.520883789038184,16.215395507755762,"m",marker='.')
+    plt.plot(15.7,15.7,"m",marker='.')
+    plt.plot(15.35161339468575,13.487097920933417,"m",marker='.')
+    plt.plot(14.092803759398226,14.026587764628072,"m",marker='.')
+    
 
     plt.xlim(-20,20)
     plt.ylim(-20,20)
     plt.show()
 
+    n1,n2,n3 = Node(-3,-2), Node(3,5), Node(6,-4)
+    k1,k2,k3 = Node(0,0),Node(0,1),Node(1,0)
+    t1 = Triangle(n1,n2,n3,True)
+    t2 = Triangle(k1,k2,k3,True)
+
+    heap = []
+    heapq.heappush(heap,t2)
+    heapq.heappush(heap, t1)
+
+    l1 = [0,1,2,3,4,5]
+
+    i = 1
+    a,b,c = l1[i:i+3]
+
+    print(a)
+    print(b)
+    print(c)
+
+
+    nod = [Node(0,0),Node(0,-1),Node(1,0)]
+
+    heap2 = []
+    for i in range(len(nod)-2):
+        if my_hull.get_angle(nod[i],nod[i+1],nod[i+2]) > 180:
+            # Concave Triangle
+            heapq.heappush(heap2, Triangle(nod[i],nod[i+1],nod[i+2],True))
+
+    print(heapq.heappop(heap2))

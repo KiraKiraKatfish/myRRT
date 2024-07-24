@@ -93,7 +93,7 @@ def random_node():
 if __name__ == "__main__":
     start = Node(-15,-15)
     goal = Node(15,15)
-    map = RRT(start, goal, 5000)
+    map = RRT(start, goal, 1000)
 
     if map.solution != []:
         for node in map.solution:

@@ -2,7 +2,7 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from Obstacle import Obstacle
-from JarvisMarch import *
+from BetterHull import BetterHull
 from KDTree import KDTree
 
 class Map:
@@ -87,17 +87,23 @@ class Map:
             if node.parent != None:
                 self.draw_edge(node, node.parent, 'r', 3)
 
-        ConvexHull = MalevolentShrine(self.solution)
-        for node_a, node_b in zip(ConvexHull, ConvexHull[1:]):
-            self.draw_edge(node_a,node_b,'r')
-        self.draw_edge(ConvexHull[0], ConvexHull[-1], 'r')
+        hull = BetterHull(self.solution,7)
+        hull_list = hull.get_coord_list()
+        x,y = zip(*hull_list)
+        self.ax.plot(x,y,color='b', lw=3)
+        self.ax.plot([x[0],x[-1]],[y[0],y[-1]],color='b', lw=3)
+
+        # self.ax.plot(hull_list[:,0])
+        # for node_a, node_b in zip(hull_list, hull_list[1:]):
+        #     self.draw_edge(node_a,node_b,'b', 3)
+        # self.draw_edge(hull_list[-1],hull_list[0],'b', 3)
 
         plt.figtext(0.333, 0.01, "Solution Cost: " + str(self.solution[0].cost), wrap=True, horizontalalignment='center', fontsize=8)
-        plt.figtext(0.667, 0.01, "Convex Hull # vertices: " + str(len(ConvexHull)), wrap=True, horizontalalignment='center', fontsize=8)
+        plt.figtext(0.667, 0.01, "Convex Hull # vertices: " + str(hull.size), wrap=True, horizontalalignment='center', fontsize=8)
 
     def plot_obstacles(self):
         for obstacle in self.obstacles:
-            patch = patches.PathPatch(obstacle.path, facecolor='blue', lw=0)
+            patch = patches.PathPatch(obstacle.path, facecolor='tab:gray', lw=0)
             self.ax.add_patch(patch)
 
     def plot_nodes(self):

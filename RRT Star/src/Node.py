@@ -10,9 +10,16 @@ class Node:
         self.children = []
         self.parent = None
         self.left, self.right = None, None
+        self.left2, self.right2 = None, None
 
     # def __eq__(self, node):
     #     return self.x == node.x and self.y == node.y
+
+    def __repr__(self):
+        return f'({self.x},{self.y})'
+    
+    def __str__(self):
+        return self.__repr__()
 
     # returns a node of distance epsilon from itself to the argument node
     def calc_w(self, sample_node, epsilon):
