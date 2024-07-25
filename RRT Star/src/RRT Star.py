@@ -95,16 +95,16 @@ if __name__ == "__main__":
     goal = Node(15,15)
     map = RRT(start, goal, 1000)
 
-    if map.solution != []:
-        for node in map.solution:
-            print("Node(%s,%s),"%(node.x, node.y))
+    # if map.solution != []:
+    #     for node in map.solution:
+    #         print("Node(%s,%s),"%(node.x, node.y))
 
-        print("Now printing DP")
+    #     print("Now printing DP")
 
-        for node in map.solution:
-            neighbors = map.tree.neighborsInRadius(node, 2)
-            for neighbor in neighbors:
-                print("Node(%s,%s),"%(neighbor.x, neighbor.y))
+    #     for node in map.solution:
+    #         neighbors = map.tree.neighborsInRadius(node, 2)
+    #         for neighbor in neighbors:
+    #             print("Node(%s,%s),"%(neighbor.x, neighbor.y))
 
     plt.show()
     

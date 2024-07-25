@@ -85,18 +85,13 @@ class Map:
     def plot_solution(self):
         for node in self.solution:
             if node.parent != None:
-                self.draw_edge(node, node.parent, 'r', 3)
+                self.draw_edge(node, node.parent, 'r', 7)
 
-        hull = BetterHull(self.solution,7)
+        hull = BetterHull(self.solution,5)
         hull_list = hull.get_coord_list()
         x,y = zip(*hull_list)
         self.ax.plot(x,y,color='b', lw=3)
         self.ax.plot([x[0],x[-1]],[y[0],y[-1]],color='b', lw=3)
-
-        # self.ax.plot(hull_list[:,0])
-        # for node_a, node_b in zip(hull_list, hull_list[1:]):
-        #     self.draw_edge(node_a,node_b,'b', 3)
-        # self.draw_edge(hull_list[-1],hull_list[0],'b', 3)
 
         plt.figtext(0.333, 0.01, "Solution Cost: " + str(self.solution[0].cost), wrap=True, horizontalalignment='center', fontsize=8)
         plt.figtext(0.667, 0.01, "Convex Hull # vertices: " + str(hull.size), wrap=True, horizontalalignment='center', fontsize=8)
