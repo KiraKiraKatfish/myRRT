@@ -1,13 +1,6 @@
 from Node import Node
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.spatial import Delaunay
 import math
 import heapq
-import random
-from triangle import triangulate
-import json
-from matplotlib.path import Path
 
 class HullNode(Node):
     def __init__(self,node, on_hull):
@@ -28,7 +21,7 @@ class HullNode(Node):
 # 2. Construct a Convex Hull around DP. Using Jarvis March
 # 3. Recursively "cut" Convex Hull until it accurately describes concavities in the DP (Concave Hull)
 # 4. Merge edges prioritizing merges adding the smallest area to the Hull. Merge until k desired edges are left in Hull, where k >= 3
-class BetterHull():
+class HullConstructor:
     def __init__(self,path, k):
         self.root = None
         self.size = 0
@@ -71,8 +64,6 @@ class BetterHull():
 
         self.link_nodes(node.left,node.right)
         self.size -= 1
-        
-
 
     def link_nodes(self, node_a, node_b):
         node_a.right = node_b
@@ -140,9 +131,6 @@ class BetterHull():
     def merge_until_ksize(self,k):
         heap = self.potential_merges(self.root,self.root)
         heapq.heapify(heap)
-        
-        # while heap:
-        #     print("Area: %s"%(heapq.heappop(heap)[0]))
 
         while self.size > k and len(heap) != 0:
             new_merges = self.merge(heapq.heappop(heap))
@@ -237,11 +225,8 @@ class BetterHull():
 
                 angle = self.get_angle(a,node,b)
                 if angle >= 180:
-
                     # find minimum perpendicular distance
                     d = self.perpendicular_distance(a,b,node)
-                    # if best_node == None:
-                    #     best_node, best_d = node, d
                     if best_node == None or d < best_d:
                         # check if it crosses the existing hull, or the solution path
                         # checking hull
@@ -399,128 +384,8 @@ class BetterHull():
     def get_coord_list(self):
         list = []
         i = self.root
-
         while i != self.root.left:
             list.append([i.x,i.y])
             i = i.right
         list.append([i.x,i.y])
         return list
-
-
-
-    ## DEBUGGING TOOLS ##
-        # Input: None
-    # Output: plots DP and hull onto matplotlib
-    def plot(self):
-        # plot DP
-        for node in self.DP:
-            plt.plot(node.x,node.y,'k', marker='.')
-
-        # plot convex hull
-        i = self.root
-        j = self.root.right
-        while j != self.root:
-            self.plot_edge(i,j,'r')
-            i = j
-            j = j.right
-        self.plot_edge(i,j,'r')
-
-    def plot_edge(self, node_a,node_b,color):
-        plt.plot([node_a.x,node_b.x], [node_a.y,node_b.y], color)
-
-class HullSampler():
-    # Input: 2d numpy array of points describing a hull. ex: [[0,0],[0,1.1],[1,0],[1,1]]
-    def __init__(self, points):
-        self.points = np.array(points)
-        segments = points
-        segments.append(points[0])
-        border = Path(segments)
-        self.tri = triangulate({'vertices': points, 'segments': segments})
-        self.triangles = self.tri['triangles'].tolist()
-        self.triangles = [x for x in self.triangles if self.in_hull(x,border)]
-
-        # tri_weights is the percentage area each triangle covers out of the whole polygon
-        self.tri_weights = []
-        for tri_points in self.points[self.triangles]:
-            area = 0.5*abs(tri_points[0][0]*tri_points[1][1]+tri_points[1][0]*tri_points[2][1]+tri_points[2][0]*tri_points[0][1]-tri_points[0][0]*tri_points[2][1]-tri_points[1][0]*tri_points[0][1]-tri_points[2][0]*tri_points[1][1])
-            self.tri_weights.append(area.item())
-
-        total_area = sum(self.tri_weights)
-        self.tri_weights = [x/total_area for x in self.tri_weights]
-
-
-    def in_hull(self,points,border):
-        x, y = zip(*self.points[points])
-
-        # Formula to calculate centroid 
-        x = round(sum(x) / 3, 2)
-        y = round(sum(y) / 3, 2)
-        if not border.contains_points([(x,y)]):
-            return False
-        return True
-
-    # Output: a uniformly sampoled random coordinate pair in a list [x,y] from within the hull
-    # Source: https://stackoverflow.com/questions/68493050/sample-uniformly-random-points-within-a-triangle
-    def sample(self):
-        for i in range(1000):
-            # select random triangle index weighted proportionally to size and size of whole polygon
-            x = random.choices(range(len(self.triangles)), weights=self.tri_weights)     
-            triangle = self.points[self.triangles][x][0]
-            
-            # get the sample
-            sample = self.sample_triangle(triangle)
-            plt.plot(sample[0],sample[1],'go')
-            
-        return 
-    
-    def sample_triangle(self,triangle):
-        # transform triangle so a is at origin
-        A = triangle[0] - triangle[0]
-        B = triangle[1] - triangle[0]
-        C = triangle[2] - triangle[0]
-
-        s = random.random()
-        t = random.random()
-        in_triangle = s + t <= 1
-        p = s*B + t*C if in_triangle else (1-s)*B + (1-t)*C
-        return p + triangle[0]
-    
-    def plot(self):
-        plt.triplot(self.points[:,0],self.points[:,1],self.triangles)
-        plt.plot(self.points[:,0],self.points[:,1], 'ro')
-
-
-if __name__ == "__main__":
-    # test if convex hull can be constructed
-    sample_path = [
-        Node(15,15),
-        Node(14.792803759398225,14.726587764628071),
-        Node(13.591207731977605,16.470970960781727),
-        Node(10.826754048513582,16.09285688763859),
-        Node(6.292029205399618,15.357679270237764),
-        Node(5.946866012354862,13.387688820979914),
-        Node(3.9209405336170207,9.348790153395093),
-        Node(0.4958074266092467,5.854199960436265),
-        Node(-0.4973338782958052,4.680164627414598),
-        Node(-1.5669402466990903,2.7743168627222694),
-        Node(-3.5248253701174193,-1.0810713465399644),
-        Node(-5.422623833865456,-4.437354575130508),
-        Node(-7.006552287239444,-7.458001010154586),
-        Node(-6.101886846904448,-11.310177188582696),
-        Node(-9.18638603381256,-15.125514548629493),
-        Node(-11.257834136985814,-14.90667494732798),
-        Node(-15,-15)]
-    
-    # my_hull = BetterHull(sample_path, 7)
-    
-
-    # my_hull.plot()
-
-    array = []
-    with open("../../RRT_Star_Final/src/hulls/map1_hull.json", 'r') as f:
-        array = json.load(f)
-    my_hull_sampler = HullSampler(array)
-    my_hull_sampler.plot()  
-    my_hull_sampler.sample()
-
-    plt.show()

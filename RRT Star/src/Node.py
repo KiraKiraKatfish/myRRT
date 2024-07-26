@@ -1,6 +1,5 @@
 import numpy as np
 import math
-import random
 
 class Node:
     def __init__(self, x, y, cost=0, children=None, parent=None):
@@ -48,21 +47,6 @@ class Node:
     
     def get_coord(self):
         return (self.x, self.y)
-    
-    # OLD/OBSOLETE
-    # returns the closest node to itself
-    # precondition: self node is not in nodes list
-    def closest_node(self, nodes):
-        closest_node = nodes[0]
-        smallest_dist = self.get_distance(nodes[0])
-
-        for node in nodes:
-            dist = self.get_distance(node)
-            if dist < smallest_dist:
-                closest_node = node
-                smallest_dist = dist
-    
-        return closest_node
     
     # recursively adds a constant to all nodes in the tree
     def add_cost(self, diff_const):
@@ -129,10 +113,10 @@ class Node:
         lines = [first_line, second_line] + [a + u * ' ' + b for a, b in zipped_lines]
         return lines, n + m + u, max(p, q) + 2, n + u // 2
     
-    def equals(self,a,b):
-        if a.x == b.x and a.y == b.y:
-            return True
-        return False
+    # def equals(self,a,b):
+    #     if a.x == b.x and a.y == b.y:
+    #         return True
+    #     return False
 
 # simple list implementation of a heap (as such, meant for small heaps)
 class NodeHeap:
@@ -167,27 +151,4 @@ class NodeHeap:
             list_string = list_string + "((" + str(element[0].x) + "," + str(element[0].y) + ")," + str(element[1]) + "),"
         list_string = list_string[:-1] + "]"
         print("Heap: ", list_string)
-
-if __name__ == "__main__":
-    print("***************Testing NodeHeap***************")
-    heap = NodeHeap(5)
-    heap.print()
-
-    values = [
-        (Node(1, 1), 1),
-        (Node(2, 2), 2),
-        (Node(3, 3), 3),
-        (Node(4, 4), 4),
-        (Node(5, 5), 5),
-        (Node(6, 6), 6),
-        (Node(7, 7), 7),
-        (Node(8, 8), 8),
-    ]
-
-    for i in range(10):
-        value = random.choice(values)
-        print("Pushing: ", value[1])
-
-        heap.push(value[0], value[1])
-        heap.print()
 

@@ -21,4 +21,3 @@ class Obstacle:
         if line_seg.intersects_path(self.path):
             return True
         return False
-    
