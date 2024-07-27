@@ -142,6 +142,9 @@ class Map:
 
     def draw_edge(self, node1, node2, c, line_width=1):
         self.ax.plot([node1.x, node2.x], [node1.y,node2.y], color=c, lw=line_width)
+
+    def show(self):
+        plt.show()
                     
 
     def random_coord(self):
