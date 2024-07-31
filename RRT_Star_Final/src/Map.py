@@ -101,6 +101,11 @@ class Map:
         self.plot_nodes()
         self.plot_solution()
 
+        if self.start and self.goal:
+            # plot the start and goal in different colors
+            self.ax.plot(self.start.x,self.start.y, 'yo', markersize=10)
+            self.ax.plot(self.goal.x,self.goal.y, 'go', markersize=10)
+
     def plot_solution(self):
         for node in self.solution:
             if node.parent != None:
@@ -118,7 +123,7 @@ class Map:
 
     def plot_obstacles(self):
         for obstacle in self.obstacles:
-            patch = patches.PathPatch(obstacle.path, facecolor='tab:gray', lw=0)
+            patch = patches.PathPatch(obstacle.path, facecolor='steelblue', lw=0)
             self.ax.add_patch(patch)
 
     def plot_nodes(self):
@@ -130,15 +135,10 @@ class Map:
             #plot the node itself
             self.ax.plot(node.x, node.y, 'k', marker='.')
 
-        if self.start and self.goal:
-            # plot the start and goal in different colors
-            self.ax.plot(self.start.x,self.start.y, 'ro')
-            self.ax.plot(self.goal.x,self.goal.y, 'go')
-
     def plot_hull(self, hull):
         x,y = zip(*hull)
-        self.ax.plot(x,y, 'm')
-        self.ax.plot([x[0],x[-1]],[y[0],y[-1]], 'm')
+        self.ax.plot(x,y, 'm',lw=1)
+        self.ax.plot([x[0],x[-1]],[y[0],y[-1]], 'm',lw=1)
 
     def draw_edge(self, node1, node2, c, line_width=1):
         self.ax.plot([node1.x, node2.x], [node1.y,node2.y], color=c, lw=line_width)

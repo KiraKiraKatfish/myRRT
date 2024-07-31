@@ -46,7 +46,7 @@ class BetterHull():
         self.make_concave()
 
         # step 4. Merge edges prioritizing merges adding the smallest area to the Hull. Merge until k desired edges are left in Hull, where k >= 3
-        self.merge_until_ksize(k)
+        #self.merge_until_ksize(k)
 
     def add_node(self,node):
         node.on_hull = True
@@ -82,10 +82,23 @@ class BetterHull():
     # Output: a DP (dot pattern) of HullNodes tracing the path. Method is drawing circles of radius r around path points 
     # Use-case: to transform a linear path into a DP such that a minimum hull can be calculated
     def path_to_DP(self,path,r):
+        # pre-processing
+        # add more nodes along path if needed
+        path_adjusted = []
+        for node_a, node_b in zip(path, path[1:]):
+            path_adjusted.append(node_a)
+            v = [node_b.x - node_a.x, node_b.y - node_a.y]
+            v_magnitude = math.sqrt(v[0]**2 + v[1]**2)
+            v_unit = [v[0]/v_magnitude, v[1]/v_magnitude]
+            for i in range(1,math.floor(node_a.get_distance(node_b) / (r))):
+                path_adjusted.append(HullNode(Node(node_a.x+v_unit[0]*i, node_a.y+v_unit[1]*i),False))
+            path_adjusted.append(node_b)
+
+        self.path = path_adjusted
         DP = []
         theta = 0
 
-        for node in path:
+        for node in path_adjusted:
             DP.append(node)
             while theta <= 360:
                 DP.append(HullNode(Node(node.x + math.cos(math.radians(theta))*r, node.y + math.sin(math.radians(theta))*r), False))
@@ -415,6 +428,10 @@ class BetterHull():
         # plot DP
         for node in self.DP:
             plt.plot(node.x,node.y,'k', marker='.')
+        
+        # plot solution
+        for node_a,node_b in zip(self.path,self.path[1:]):
+            self.plot_edge(node_a,node_b,'r')
 
         # plot convex hull
         i = self.root
@@ -511,16 +528,16 @@ if __name__ == "__main__":
         Node(-11.257834136985814,-14.90667494732798),
         Node(-15,-15)]
     
-    # my_hull = BetterHull(sample_path, 7)
+    my_hull = BetterHull(sample_path, 7)
     
 
-    # my_hull.plot()
+    my_hull.plot()
 
-    array = []
-    with open("../../RRT_Star_Final/src/hulls/map1_hull.json", 'r') as f:
-        array = json.load(f)
-    my_hull_sampler = HullSampler(array)
-    my_hull_sampler.plot()  
-    my_hull_sampler.sample()
+    # array = []
+    # with open("../../RRT_Star_Final/src/hulls/map1_hull.json", 'r') as f:
+    #     array = json.load(f)
+    # my_hull_sampler = HullSampler(array)
+    # my_hull_sampler.plot()  
+    # my_hull_sampler.sample()
 
     plt.show()

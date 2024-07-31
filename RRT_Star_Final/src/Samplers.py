@@ -22,7 +22,13 @@ class HullSampler():
         segments.append(points[0])
         border = Path(segments)
         self.tri = triangulate({'vertices': points, 'segments': segments})
+        self.points = np.array(self.tri['vertices'].tolist())
+
+
+        #plt.plot(self.points[:,0], self.points[:,1], 'o')
         self.triangles = self.tri['triangles'].tolist()
+        # plt.triplot(self.points[:,0], self.points[:,1], self.triangles) 
+
         self.triangles = [x for x in self.triangles if self.in_hull(x,border)]
 
         # tri_weights is the percentage area each triangle covers out of the whole polygon
