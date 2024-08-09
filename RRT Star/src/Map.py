@@ -55,6 +55,7 @@ class Map:
     def findCloseNeighbors(self, target, r):
         return self.tree.neighborsInRadius(target, r)
     
+    # For rewiring paths
     # compares target node's path to potential new paths using nodes in the list
     # reduces target node's path to the shortest possible path
     def reduce_path(self, target, nodes):

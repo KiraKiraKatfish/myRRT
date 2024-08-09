@@ -296,24 +296,24 @@ def make_map(id):
 
 def generate_hulls(hull_size):
     # make hull for map id 1 (zig-zag)
-    # map1 = make_map(1)
-    # rrt1 = RRTStar(map1, 5)
-    # if rrt1.run():
-    #     with open('hulls/map1_hull.json', 'w') as f:
-    #         json.dump(rrt1.export_hull(hull_size), f, indent=2)
-    #     print("Zig-Zag Success")
-    # else:
-    #     print("Zig-Zag Failure")
+    map1 = make_map(1)
+    rrt1 = RRTStar(map1, 5)
+    if rrt1.run():
+        with open('hulls/map1_hull.json', 'w') as f:
+            json.dump(rrt1.export_hull(hull_size), f, indent=2)
+        print("Zig-Zag Success")
+    else:
+        print("Zig-Zag Failure")
     
     # make hull for map id 2 (maze)
-    # map2 = make_map(2)
-    # rrt2 = RRTStar(map2, 5)
-    # if rrt2.run():
-    #     with open('hulls/map2_hull.json', 'w') as f:
-    #         json.dump(rrt2.export_hull(hull_size), f, indent=2)
-    #     print("Maze Success")
-    # else:
-    #     print("Maze Failure")
+    map2 = make_map(2)
+    rrt2 = RRTStar(map2, 5)
+    if rrt2.run():
+        with open('hulls/map2_hull.json', 'w') as f:
+            json.dump(rrt2.export_hull(hull_size), f, indent=2)
+        print("Maze Success")
+    else:
+        print("Maze Failure")
 
     # make hull for map id 1 (maze)
     map3 = make_map(3)
@@ -355,47 +355,47 @@ if __name__ == "__main__":
         generate_hulls(hull_size)
         plt.close()
         plt.close()
-        # plt.close()
+        plt.close()
 
-        # # Map 1 - No Hull
-        # map1_no_hull = make_map(1)
-        # rrt = RRTStar(map1_no_hull,5)
-        # rrt.run()
-        # rrt.plot_map()
-        # rrt.plot_time_to_length()
-        # # store_data(rrt,1,False,hull_size,i)
+        # Map 1 - No Hull
+        map1_no_hull = make_map(1)
+        rrt = RRTStar(map1_no_hull,5)
+        rrt.run()
+        rrt.plot_map()
+        rrt.plot_time_to_length()
+        # store_data(rrt,1,False,hull_size,i)
 
-        # # Map 1 - Hull
-        # map1_with_hull = make_map(1)
-        # rrt = RRTStar(map1_with_hull,5,get_hull(1))
-        # rrt.run()
-        # rrt.plot_map()
-        # rrt.plot_time_to_length()
-        # # store_data(rrt,1,True,hull_size,i)
+        # Map 1 - Hull
+        map1_with_hull = make_map(1)
+        rrt = RRTStar(map1_with_hull,5,get_hull(1))
+        rrt.run()
+        rrt.plot_map()
+        rrt.plot_time_to_length()
+        # store_data(rrt,1,True,hull_size,i)
 
-        # # Map 2 - No Hull
-        # map2_no_hull = make_map(2)
-        # rrt = RRTStar(map2_no_hull,5)
-        # rrt.run()
-        # rrt.plot_map()
-        # rrt.plot_time_to_length()
-        # # store_data(rrt,2,False,hull_size,i)
+        # Map 2 - No Hull
+        map2_no_hull = make_map(2)
+        rrt = RRTStar(map2_no_hull,5)
+        rrt.run()
+        rrt.plot_map()
+        rrt.plot_time_to_length()
+        # store_data(rrt,2,False,hull_size,i)
 
-        # Map 2 - Hull
-        # map2_with_hull = make_map(2)
-        # rrt = RRTStar(map2_with_hull,5,get_hull(2))
-        # rrt.run()
-        # rrt.plot_map()
-        # rrt.plot_time_to_length()
-        # # store_data(rrt,2,True,hull_size,i)
+        #Map 2 - Hull
+        map2_with_hull = make_map(2)
+        rrt = RRTStar(map2_with_hull,5,get_hull(2))
+        rrt.run()
+        rrt.plot_map()
+        rrt.plot_time_to_length()
+        # store_data(rrt,2,True,hull_size,i)
 
-        # # Map 3 - No Hull
-        # map3_no_hull = make_map(3)
-        # rrt = RRTStar(map3_no_hull, 5)
-        # rrt.run()
-        # rrt.plot_map()
-        # rrt.plot_time_to_length()
-        # # store_data(rrt,3,False,hull_size,i)
+        # Map 3 - No Hull
+        map3_no_hull = make_map(3)
+        rrt = RRTStar(map3_no_hull, 5)
+        rrt.run()
+        rrt.plot_map()
+        rrt.plot_time_to_length()
+        # store_data(rrt,3,False,hull_size,i)
 
         # Map 3 - Hull
         map3_with_hull = make_map(3)
